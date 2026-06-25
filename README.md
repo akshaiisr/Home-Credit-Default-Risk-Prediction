@@ -11,7 +11,7 @@ risk before a loan is approved, helping the business make safer decisions.
 ## Dataset
 Home Credit `application_train.csv` — 307,511 applicants, 122 columns.
 Default rate is 8% (imbalanced).
-Dataset Link: (https://drive.google.com/file/d/1jaST5RMR4TnweYKxlDviBPyN-JSCGhbb/view?usp=sharing)
+Dataset Link: ([https://drive.google.com/file/d/1jaST5RMR4TnweYKxlDviBPyN-JSCGhbb/view?usp=sharing](https://www.kaggle.com/competitions/home-credit-default-risk/data?select=application_train.csv)
 
 ## Approach
 - Cleaned data: dropped columns >50% empty, converted DAYS_BIRTH to age.
