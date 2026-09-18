@@ -2,39 +2,59 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# load saved files
+# Load the tuned model and the typical/default values used for fields
+# that are not entered manually in the web form.
 model = joblib.load('model.pkl')
 columns = joblib.load('columns.pkl')
+defaults = joblib.load('defaults.pkl')
 
-st.title("Home Credit — Default Risk Predictor")
-st.write("Enter applicant details to estimate default probability.")
+# Threshold selected from the validation ROC curve (Youden's J statistic).
+DECISION_THRESHOLD = 0.463
 
-# collect the key inputs
-ext2 = st.slider("External Score 2 (0-1)", 0.0, 1.0, 0.5)
-ext3 = st.slider("External Score 3 (0-1)", 0.0, 1.0, 0.5)
-credit = st.number_input("Loan amount (AMT_CREDIT)", value=600000)
-annuity = st.number_input("Annuity (yearly repayment)", value=27000)
-goods = st.number_input("Goods price", value=540000)
-income = st.number_input("Annual income", value=170000)
-age = st.slider("Age", 20, 70, 40)
-employed_years = st.slider("Years employed", 0, 40, 5)
+st.set_page_config(page_title='Home Credit Default Risk Predictor', page_icon='📊')
 
-if st.button("Predict default risk"):
-    # start every feature at 0, then fill the ones we collected
-    row = pd.DataFrame([[0]*len(columns)], columns=columns)
-    row['EXT_SOURCE_2'] = ext2
-    row['EXT_SOURCE_3'] = ext3
-    row['AMT_CREDIT'] = credit
-    row['AMT_ANNUITY'] = annuity
-    row['AMT_GOODS_PRICE'] = goods
-    row['AMT_INCOME_TOTAL'] = income
-    row['AGE'] = age
-    row['DAYS_BIRTH'] = -age * 365
-    row['DAYS_EMPLOYED'] = -employed_years * 365
+st.title('Home Credit — Default Risk Predictor')
+st.write(
+    'Enter the key applicant details below. The model estimates the probability '
+    'of default using the tuned LightGBM model.'
+)
 
-    prob = model.predict_proba(row)[0][1]
-    st.subheader(f"Default risk: {prob*100:.1f}%")
-    if prob > 0.5:
-        st.error("High risk — likely to default")
+ext2 = st.slider('External Score 2 (0–1)', 0.0, 1.0, 0.50, 0.01)
+ext3 = st.slider('External Score 3 (0–1)', 0.0, 1.0, 0.50, 0.01)
+credit = st.number_input('Loan amount (AMT_CREDIT)', min_value=0.0, value=600000.0, step=1000.0)
+annuity = st.number_input('Annuity (yearly repayment)', min_value=0.0, value=27000.0, step=500.0)
+goods = st.number_input('Goods price', min_value=0.0, value=540000.0, step=1000.0)
+income = st.number_input('Annual income', min_value=0.0, value=170000.0, step=1000.0)
+age = st.slider('Age', 20, 70, 40)
+employed_years = st.slider('Years employed', 0, 40, 5)
+
+if st.button('Predict default risk'):
+    # Start from realistic typical values learned from the training data rather
+    # than setting every unused feature to zero.
+    row = pd.DataFrame([defaults]).reindex(columns=columns)
+
+    # Replace the fields collected in the interface with the applicant values.
+    row.loc[0, 'EXT_SOURCE_2'] = ext2
+    row.loc[0, 'EXT_SOURCE_3'] = ext3
+    row.loc[0, 'AMT_CREDIT'] = credit
+    row.loc[0, 'AMT_ANNUITY'] = annuity
+    row.loc[0, 'AMT_GOODS_PRICE'] = goods
+    row.loc[0, 'AMT_INCOME_TOTAL'] = income
+    row.loc[0, 'AGE'] = age
+    row.loc[0, 'DAYS_BIRTH'] = -age * 365
+    row.loc[0, 'DAYS_EMPLOYED'] = -employed_years * 365
+
+    probability = model.predict_proba(row)[0, 1]
+
+    st.subheader(f'Default risk: {probability * 100:.1f}%')
+    st.progress(min(float(probability), 1.0))
+
+    if probability >= DECISION_THRESHOLD:
+        st.error('Higher risk — the predicted risk is above the validation-based decision threshold.')
     else:
-        st.success("Low risk — likely to repay")
+        st.success('Lower risk — the predicted risk is below the validation-based decision threshold.')
+
+    st.caption(
+        f'Decision threshold: {DECISION_THRESHOLD:.3f}. '
+        'This is a model estimate for demonstration and should not be used as the sole basis for a real lending decision.'
+    )
