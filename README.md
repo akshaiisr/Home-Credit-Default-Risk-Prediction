@@ -29,8 +29,8 @@ Dataset Link: (https://www.kaggle.com/competitions/home-credit-default-risk/data
 Streamlit link — (https://home-credit-default-risk-prediction-dycgn3eghwv3q9nykkceqv.streamlit.app/)
 
 ## Demo Video
-[https://drive.google.com/file/d/19iy3UKAZNq3EmK0O5NeGjhMD_2bXIQrQ/view?usp=drive_link<img width="468" height="42" alt="image" src="https://github.com/user-attachments/assets/9cec4577-c900-4d3b-a3a7-4ff5b1b73ea3" />
-]
+[https://drive.google.com/file/d/19iy3UKAZNq3EmK0O5NeGjhMD_2bXIQrQ/view?usp=drive_link]
+
 
 ## How to Run
 1. Install: `pip install -r requirements.txt`
